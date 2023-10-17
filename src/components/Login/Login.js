@@ -1,15 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useReducer } from 'react';
 
 import Card from '../UI/Card/Card';
 import classes from './Login.module.css';
 import Button from '../UI/Button/Button';
 
+
+const emailReducerFn = (state, action) => {
+  return { 
+    value: '', 
+    isValid: false 
+  }
+}
+
 const Login = (props) => {
-  const [enteredEmail, setEnteredEmail] = useState('');
-  const [emailIsValid, setEmailIsValid] = useState();
+  // const [enteredEmail, setEnteredEmail] = useState('');
+  // const [emailIsValid, setEmailIsValid] = useState();
   const [enteredPassword, setEnteredPassword] = useState('');
   const [passwordIsValid, setPasswordIsValid] = useState();
   const [formIsValid, setFormIsValid] = useState(false);
+
+
+  const [emailState, dispatchEmail] = useReducer(emailReducerFn,)
 
   const emailChangeHandler = (event) => {
     setEnteredEmail(event.target.value);
@@ -22,12 +33,24 @@ const Login = (props) => {
     // );
   };
   useEffect(() => {
-    setFormIsValid(
-      enteredEmail.includes('@') && enteredPassword.trim().length > 6
-    );
 
-    
-  } , [setFormIsValid , enteredEmail , enteredPassword ])
+
+    const identifier = setTimeout(() => {
+      console.log("Checking form validity")
+      setFormIsValid(
+         //enteredEmail.includes('@') && enteredPassword.trim().length > 6
+         emailState.isValid && enteredPassword.trim().length > 6 
+      );
+      // doing this is called as de-bouncing
+      console.log('set time out executes')
+
+
+    }, 500)
+    return () => {
+      clearTimeout(identifier);
+      console.log("CLEANUP")
+    }  // this is called cleanup function as this cleans up useEffect before re-execution
+  }, [setFormIsValid, emailState.value, enteredPassword])
 
   // now this useEffect is running again and again wheneever there is any changes
   // changes in the dependencies injected  
@@ -43,7 +66,8 @@ const Login = (props) => {
   };
 
   const validateEmailHandler = () => {
-    setEmailIsValid(enteredEmail.includes('@'));
+   // setEmailIsValid(enteredEmail.includes('@'));
+   setEmailIsValid(emailState.isValid)
   };
 
   const validatePasswordHandler = () => {
@@ -52,30 +76,28 @@ const Login = (props) => {
 
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onLogin(enteredEmail, enteredPassword);
+    props.onLogin(emailState.value, enteredPassword);
   };
 
   return (
     <Card className={classes.login}>
       <form onSubmit={submitHandler}>
         <div
-          className={`${classes.control} ${
-            emailIsValid === false ? classes.invalid : ''
-          }`}
+          className={`${classes.control} ${emailState.isValid === false ? classes.invalid : ''
+            }`}
         >
           <label htmlFor="email">E-Mail</label>
           <input
             type="email"
             id="email"
-            value={enteredEmail}
+            value={emailState.value}
             onChange={emailChangeHandler}
             onBlur={validateEmailHandler}
           />
         </div>
         <div
-          className={`${classes.control} ${
-            passwordIsValid === false ? classes.invalid : ''
-          }`}
+          className={`${classes.control} ${passwordIsValid === false ? classes.invalid : ''
+            }`}
         >
           <label htmlFor="password">Password</label>
           <input
